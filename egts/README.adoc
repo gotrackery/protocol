@@ -1,0 +1,272 @@
+= EGTS protocol specification
+
+Order of the Ministry of Transport of Russia from 31.07.2012 N 285
+
+.Composition of the Transport layer protocol package
+[cols="^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^"]
+[%autowidth]
+|===
+| bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 | M/O | Type | Size (byte)
+8+| PRV (Protocol Version) | M | BYTE | 1
+2+| PRF (Prefix) | RTE 2+| ENA | CMP 2+| PR | M | BYTE | 1
+8+| HL (Header Length) | M | BYTE | 1
+8+| HE (Header Encoding) | M | BYTE | 1
+8+| FDL (Frame Data Length) | M | USHORT | 2
+8+| PID (Packet Identifier) | M | USHORT | 2
+8+| PT (Packet Type) | M | BYTE | 1
+8+| PRA (Peer Address) | O | USHORT | 2
+8+| RCA (Recipient Address) | O | USHORT | 2
+8+| TTL (Time To Live) | O | BYTE | 1
+8+| HCS (Header Check Sum) | M | BYTE | 1
+8+| SFRD (Services Frame Data) | O | BINARY | 0 ... 65517
+8+| SFRCS (Services Frame Data Check Sum) | O | USHORT | 0,2
+|===
+
+The Transport Layer Protocol header consists of the following fields: PRV, PRF, PR, CMP, ENA, RTE, HL, HE, FDL, PID, PT, PRA, RCA, TTL, HCS. The Service Support Level protocol is represented by the SFRD field, the checksum of the Service Support Level field is contained in the SFRCS field.
+
+- PRV parameter contains the value 0x01. The value of this parameter is incremented each time when changes in the header structure are made.
+- SKID parameter specifies an identifier of a key used in encryption.
+- The PRF parameter defines the prefix of the Transport Layer Header and contains the value 00. 5.8. The RTE (Route) field determines the need for further routing of this packet to the
+remote hardware and software complex, as well as the presence of optional parameters PRA, RCA, TTL, required for routing this packet. If the field is 1, then routing is required and the PRA, RCA, TTL fields are present in the packet. This field sets the Dispatcher of the hardware and software complex on which the packet was generated, or the subscriber terminal that generated the packet for sending to the hardware and software complex, if the parameter "HOME_DISPATCHER_ID" is set in it, defining the address of the hardware and software complex on which this subscriber terminal is registered.
+- The ENA (Encryption Algorithm) field specifies the algorithm code used to encrypt data from the SFRD field. If the field is set to 00, the data in the SFRD field is not encrypted.
+- The CMP (Compressed) field determines whether data from the SFRD field is compressed. If the field has a value of 1, the data in the SFRD field is considered compressed.
+- PR (Priority) field defines routing priority of this packet and can take the following values:
+** 00 - highest
+** 01 - high
+** 10 - medium
+** 11 - low
+
+When a packet is received, Dispatcher routes a packet with a higher priority faster than packets with a lower priority.
+
+- The HL field is the length of the Transport Layer header in bytes, including the checksum byte (HCS fields).
+- The HE field defines the encoding method used for the next part of the Transport Layer Header following this parameter.
+- The FDL field determines the size in bytes of the SFRD data field containing Service Level Support Protocol information.
+- The PID field contains the Transport Layer packet number, increasing by 1 with each new packet sent on the sender side. Values in this field change by the rules of cyclic counter in the range from 0 to 65535, i.e. the next value is 0 when 65535 is reached.
+- PT field - type of packet of Transport layer. Field PT can take following values.
+** 0 - EGTS_PT_RESPONSE (confirmation on Transaction Level packet);
+** 1 - EGTS_PT_APPDATA (packet containing Service Level Support Protocol data);
+** 2 - EGTS_PT_SIGNED_APPDATA (packet containing Service Level Support Protocol data with signed). _NOT IMPLEMENTED YET!_
+- The PRA field is the address of the hardware and software complex where this packet was generated. This address is unique within the network and is used to create a confirmation packet on the receiving side.
+- RCA field - the address of the hardware and software complex, for which this packet is intended. At this address the identification of the package belonging to a particular hardware and software complex and its routing when using the intermediate hardware and software complexes.
+- TTL field - the lifetime of the packet when routing between hardware and software complexes. Use of this parameter prevents packet looping during retransmission in systems with a complex topology of address points. The TTL is initially set by the hardware and software complex that generated the packet. The TTL value is set equal to the maximum allowed number of hardware and software complexes between the sending and receiving hardware and software complexes. The TTL value decreases by one when a packet is transmitted through each hardware and software complex, and the Transport Layer Header checksum is recalculated. When this parameter reaches 0 and when further routing is detected, the packet is destroyed and the corresponding PC_TTLEXPIRED code.
+- HCS field - checksum of Transport Layer Header (starting from "PRV" field to "HCS" field, not including "HCS" field). CRC-8 algorithm is applied to all bytes of the specified sequence to calculate HCS field value.
+- SFRD field - data structure, which depends on packet type and contains Service Level Support Protocol information.
+- SFRCS field - checksum of the Service Support Level Protocol field. To calculate the checksum on data from the SFRD field, the CRC-16 algorithm is used. This field is present only if there is the SFRD field.
+
+== EGTS_PT_APPDATA package data structure
+.SFRD field format for EGTS_PT_APPDATA type packet.
+[cols="^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^"]
+[%autowidth]
+|===
+| bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 | M/O | Type | Size (byte)
+8+| SDR 1 (Service Data Record) | O | BINARY | 9 ... 65517
+8+| SDR 2 | O | BINARY | 9 ... 65517
+8+| ... | O | |
+8+| SDR n | O | BINARY | 9 ... 65517
+|===
+The structures SDR 1, SDR 2, SDR n contain information of the Protocol level of service support.
+
+== EGTS_PT_SIGNED_APPDATA package data structure
+.SFRD field format for EGTS_PT_SIGNED_APPDATA type packet.
+[cols="^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^"]
+[%autowidth]
+|===
+| bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 | M/O | Type | Size (byte)
+8+| SIGL (Signature Length) | M | SHORT | 2
+8+| SIGD (Signature Data) | O | BINARY | 0 ... 512
+8+| SDR 1 (Service Data Record) | O | BINARY | 9 ... 65515
+8+| SDR 2 | O | BINARY | 9 ... 65515
+8+| ... | O | BINARY | 9 ... 65515
+8+| SDR n | O | BINARY | 9 ... 65515
+|===
+- The parameter SIGL defines the length of the data "digital signature" from the field SIGD.
+- The SIGD parameter contains directly "digital signature" data.
+- Structures SDR 1, SDR 2, SDR n contain Service Level support information.
+- On each packet of EGTS_PT_APPDATA or EGTS_PT_SIGNED_APPDATA type, arriving
+from subscriber terminal to hardware-software complex or from hardware-software complex to subscriber terminal, sends EGTS_PT_RESPONSE packet, containing in PID field packet number from EGTS_PT_APPDATA or EGTS_PT_SIGNED_APPDATA
+
+== EGTS_PT_RESPONSE package data structure
+.SFRD field format for EGTS_PT_RESPONSE type packet
+[cols="^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^"]
+[%autowidth]
+|===
+| bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 | M/O | Type | Size (byte)
+8+| RPID (Response Packet ID) | M | USHORT | 2
+8+| PR (Processing Result) | M | BYTE | 1
+8+| SDR 1 (Service Data Record) | O | BINARY | 9 ... 65517
+8+| SDR 2 | O | BINARY | 9 ... 65517
+8+| ... | O | BINARY | 9 ... 65517
+8+| SDR n | O | BINARY | 9 ... 65517
+|===
+
+.Processing Result
+[cols="^.^,<.^,<.^"]
+[%autowidth]
+|===
+| Value | Marking | Description
+| 0 | EGTS_PC_OK | successfully processed
+| 1 | EGTS_PC_IN_PROGRESS | in progress
+| 128 | EGTS_PC_UNS_PROTOCOL | unsupported protocol
+| 129 | EGTS_PC_DECRYPT_ERROR | decoding error
+| 130 | EGTS_PC_PROC_DENIED | processing is prohibited
+| 131 | EGTS_PC_INC_HEADERFORM | incorrect header format
+| 132 | EGTS_PC_INC_DATAFORM | incorrect data format
+| 133 | EGTS_PC_UNS_TYPE | unsupported type
+| 134 | EGTS_PC_NOTEN_PARAMS | incorrect number of parameters
+| 135 | EGTS_PC_DBL_PROC | retreatment attempt
+| 136 | EGTS_PC_PROC_SRC_DENIED | processing of data from the source is prohibited
+| 137 | EGTS_PC_HEADERCRC_ERROR | header checksum error
+| 138 | EGTS_PC_DATACRC_ERROR | data checksum error
+| 139 | EGTS_PC_INVDATALEN | incorrect data length
+| 140 | EGTS_PC_ROUTE_NFOUND | route not found
+| 141 | EGTS_PC_ROUTE_CLOSED | route closed
+| 142 | EGTS_PC_ROUTE_DENIED | routing is prohibited
+| 143 | EGTS_PC_INVADDR | incorrect address
+| 144 | EGTS_PC_TTLEXPIRED | the number of data retransmissions is exceeded
+| 145 | EGTS_PC_NO_ACK | no confirmation
+| 146 | EGTS_PC_OBJ_NFOUND | object not found
+| 147 | EGTS_PC_EVNT_NFOUND | no event found
+| 148 | EGTS_PC_SRVC_NFOUND | service not found
+| 149 | EGTS_PC_SRVC_DENIED | service is prohibited
+| 150 | EGTS_PC_SRVC_UNKN | unknown service type
+| 151 | EGTS_PC_AUTH_DENIED | authorization denied
+| 152 | EGTS_PC_ALREADY_EXISTS | the object already exists
+| 153 | EGTS_PC_ID_NFOUND | ID not found
+| 154 | EGTS_PC_INC_DATETIME | incorrect date and time
+| 155 | EGTS_PC_IO_ERROR | I/O error
+| 156 | EGTS_PC_NO_RES_AVAIL | insufficient resources
+| 157 | EGTS_PC_MODULE_FAULT | internal module failure
+| 158 | EGTS_PC_MODULE_PWR_FLT | module power supply circuit failure
+| 159 | EGTS_PC_MODULE_PROC_FLT | module microcontroller failure
+| 160 | EGTS_PC_MODULE_SW_FLT | module program failure
+| 161 | EGTS_PC_MODULE_FW_FLT | module internal software failure
+| 162 | EGTS_PC_MODULE_IO_FLT | module I/O unit failure
+| 163 | EGTS_PC_MODULE_MEM_FLT | module internal memory failure
+| 164 | EGTS_PC_TEST_FAILED | test failed
+|===
+
+== Composition of EGTS_TELEDATA_SERVICE service
+EGTS_TELEDATA_SERVICE service processes monitoring information from the subscriber's terminal.
+
+.List of EGTS_TELEDATA_SERVICE service sub entries
+[cols="^.^,<.^,<.^,^.^"]
+[%autowidth]
+|===
+| Value | Marking | Description | Implemented
+| 0  | EGTS_SR_RECORD_RESPONSE | It is used to carry out confirmation of receipt and transmission the results of the processing of the Tier service support | Y
+| 16  | EGTS_SR_POS_DATA | Used by the subscriber terminal When transmitting basic data positioning | Y
+| 17  | EGTS_SR_EXT_POS_DATA | Used by the subscriber terminal When transmitting additional data positioning | Y
+| 18  | EGTS_SR_AD_SENSORS_DATA | It is used by the subscriber terminal to Transmission to the hardware and software information on the status of additional discrete and analog inputs | Y
+| 19  | EGTS_SR_COUNTERS_DATA | It is used by the hardware and software The hardware and software system transmits to the subscriber's terminal with data about the values of the counting inputs | Y
+| 20  | EGTS_SR_STATE_DATA | It is used to transmit to the hardware and software complex information about the status of the subscriber's terminal | Y
+| 22  | EGTS_SR_LOOPIN_DATA | It is used by the subscriber terminal to Transmission to the hardware and software complex complex data on the status of loop inputs. | N
+| 23  | EGTS_SR_ABS_DIG_SENS_DATA | It is used by the subscriber terminal to Transmission to the hardware and software complex complex data on the state of one digital input. | N
+| 24  | EGTS_SR_ABS_AN_SENS_DATA | It is used by the subscriber terminal to Transmission to the hardware and software complex complex data on the state of one analog input. | Y
+| 25  | EGTS_SR_ABS_CNTR_DATA | It is used by the subscriber terminal to Transmission to the hardware and software complex complex data on the state of one counting input. | Y
+| 26  | EGTS_SR_ABS_LOOPIN_DATA | It is used by the subscriber terminal to Transmission to the hardware and software complex data on the status of a single loop input. | N
+| 27  | EGTS_SR_LIQUID_LEVEL_SENSOR | It is used by the subscriber terminal to Transmission to the hardware and software complex Data on DUH readings is transmitted by the subscriber terminal. | Y
+| 28  | EGTS_SR_PASSENGERS_COUNTERS | It is used by the subscriber terminal to transmit to the hardware and software complex data on counter readings of passenger traffic. | N
+|===
+
+== EGTS_SR_POS_DATA sub record structure
+.Subrecord format EGTS_SR_POS_DATA of EGTS_TELEDATA_SERVICE service
+[cols="^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^,^.^"]
+[%autowidth]
+|===
+| bit 7 | bit 6 | bit 5 | bit 4 | bit 3 | bit 2 | bit 1 | bit 0 | M/O | Type | Size (byte)
+8+| NTM (Navigation Time) | M | UINT | 4
+8+| LAT (Latitude) | M | UINT | 4
+8+| LONG (Longitude) | M | UINT | 4
+8+| FLG (Flags) .2+| M .2+| BYTE .2+| 1
+| ALTE | LOHS | LAHS | MV | BB | CS | FIX | VLD
+8+| SPD (Speed) low bits .2+| M .2+| USHORT .2+| 2
+| DIRH | ALTS 6+| SPD (Speed) high bits
+8+| DIR (Direction) | M | BYTE | 1
+8+| ODM (Odometer) | M | BINARY | 3
+8+| DIN (Digital Inputs) | M | BYTE | 1
+8+| SRC (Source) | M | BYTE | 1
+8+| ALT (Altitude)  | O | BINARY | 3
+8+| SRCD (Source Data) | O | SHORT | 2
+|===
+- NTM - navigation time (number of seconds since 00:00:00 01.01.2010 UTC);
+- LAT - latitude modulo, degrees/90 - 0xFFFFFFFFFFFF and the integer part is taken;
+- LONG - longitude modulo, degrees/180 - 0xFFFFFFFFFFFF and integer part taken;
+- FLG - defines additional parameters of the navigation parcel;
+- ALTE - bit flag defines presence of ALT field in the subrecord:
+** 1 - ALT field is transmitted;
+** 0 - is not transmitted;
+- LOHS - bit flag defines hemisphere longitude:
+** 0 - eastern longitude:
+** 1 - west longitude;
+- LAHS - the bit flag defines the hemisphere of latitude:
+** 0 - north latitude;
+** 1 - south latitude;
+- MV - bit flag, motion feature:
+** 1 - movement;
+** 0 - vehicle is in parking mode;
+- BB - bit flag, sign of sending data from memory ("black box"):
+** 0 - actual data;
+** 1 - data from memory ("black box");
+- FIX - bit field, type of coordinate determination:
+** 0 - 2D fix;
+** 1 - 3D fix;
+- CS - bit field, type of the system used:
+** 0 - WGS-84 coordinate system;
+** 1 - state geocentric coordinate system (PZ-90.02);
+- VLD - bit flag, sign of "validity" of coordinate data:
+** 1 - "valid" data;
+** 0 - "invalid" data;
+- SPD - speed in km/h with a resolution of 0,1 km/h (14 low bits are used);
+- ALTS - (Altitude Sign) bit flag, defines the altitude relative to sea level and has a meaning  only when ALTE flag is set:
+** 0 - point above sea level;
+** 1 - below sea level;
+- DIRH - (Direction the Highest bit) the highest bit (8) of the DIR parameter;
+- DIR - direction of movement. Defined as the angle in degrees which is counted clockwise  clockwise between the North direction of geographic meridian and direction of movement at measurement point (additionally the most significant bit is in the DIRH field);
+- ODM - traveled distance (mileage) in km, in increments of 0.1 km;
+- DIN - bit flags, determine the state of main discrete inputs 1 ... 8 (if the bit is 1, the corresponding input is active, if 0, it is inactive). This field is included for convenience of use and traffic saving when working in the transport monitoring systems of the basic level;
+- SRC - defines the source (event) which initiated sending of this navigation information (the information is presented in Table N 3);
+- ALT - altitude above sea level, m (optional parameter, availability of which is determined by the ALTE bit flag);
+- SRCD - data characterizing the source (event) from the SRC field. Presence and interpretation of the value of this field is determined by the SRC field.
+
+.List of sources of EGTS_TELEDATA_SERVICE coordinate data parcels
+[cols="^.^,<.^"]
+[%autowidth]
+|===
+| Code | Description
+| 0 | timer when the ignition is on
+| 1 | covered distance
+| 2 | exceeding the set value of the rotation angle
+| 3 | response to a request
+| 4 | change in the state of input X
+| 5 | timer when the ignition is off
+| 6 | disconnecting peripheral equipment
+| 7 | exceeding one of the preset speed thresholds
+| 8 | restart of the central processor (restart)
+| 9 | Y output overload
+| 10 | tamper switch is triggered
+| 11 | switching to backup power / disconnecting external power
+| 12 | the backup power supply voltage drops below the threshold value
+| 13 | the "panic button" has been pressed
+| 14 | request to establish a voice connection with the operator
+| 15 | emergency call
+| 16 | appearance of data from an external service
+| 17 | reserved
+| 18 | reserved
+| 19 | backup battery failure
+| 20 | rapid acceleration
+| 21 | sudden braking
+| 22 | disconnection or malfunction of the navigation module
+| 23 | disconnection or malfunction of the automatic identification sensor accident events
+| 24 | GSM/UMTS antenna failure or malfunction
+| 25 | disconnection or malfunction of the navigation system antenna
+| 26 | reserved
+| 27 | speed drop below one of the preset thresholds
+| 28 | moving when the ignition is off
+| 29 | timer in "emergency tracking" mode
+| 30 | start/end of navigation
+| 31 | "unstable navigation" (exceeding the interruption frequency threshold navigation mode when the ignition is on or the emergency mode tracking mode)
+| 32 | setting up an IP connection
+| 33 | unstable registration in the mobile radio telephone network
+| 34 | "unstable communication" (exceeding the frequency threshold The following table describes the labels in this manual and the labels in this manual or emergency tracking mode)
+| 35 | change of operation
+|===

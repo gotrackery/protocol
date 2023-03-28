@@ -1,3 +1,9 @@
+# IDE's and OS files
+*.DS_Store
+/**/.idea/*
+/**/.vscode/*
+*.code-workspace
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

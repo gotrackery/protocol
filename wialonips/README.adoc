@@ -1,0 +1,53 @@
+= Wialon IPS
+
+The Wialon IPS (v. 2.0) communication protocol was developed by
+Gurtam for use in personal and automotive GPS and GLONASS trackers which
+transfer data to a satellite monitoring server using the TCP or the UDP protocol.
+
+== TCP Data Transfer
+The TCP connection must be maintained throughout the entire data transfer process.
+If the device disconnects immediately after sending the message,
+the server does not have time to send a response to the device, and traffic consumption increases.
+While using one TCP connection, you should transfer data from one device.
+Otherwise, the system registers only the data of the device whose ID is the first in the incoming data list.
+To save traffic, you can use the UDP protocol. However, it does not guarantee that the messages will be delivered.
+
+.Packet Types
+[%autowidth]
+|===
+| Type | Description | Sender | Decoder | Encoder
+| L | Login packet | Device | Y | N
+| AL | Answer to the login packet | Server | N | N
+| SD | Short data packet | Device | Y | N
+| ASD | Answer to the short data packet | Server | N | N
+| D | Extended data packet | Device | Y | N
+| AD | Answer to the extended data packet | Server | N | N
+| B | Black box packet | Device | Y | N
+| AB | Answer to the black box packet | Server | N | N
+| P | Ping packet | Device | N | N
+| AP | Answer to the ping packet | Server | N | N
+| US | Firmware packet | Server | N | N
+| UC | Configuration packet | Server | N | N
+| M | Message to/from the driver | Server/Device | N | N
+| AM | Answer to the message from the driver | Server | N | N
+| QI | Query snapshot command | Server | N | N
+| I | Snapshot packet | Device | N | N
+| AI | Answer to the snapshot packet | Server | N | N
+| QT | Query DDD file command | Server | N | N
+| IT | DDD file information packet | Device | N | N
+| AIT | Answer to the DDD file information packet | Server | N | N
+| T | DDD file block packet | Device | N | N
+| AT | Answer to the DDD file block packet | Server | N | N
+|===
+
+== UDP Data Transfer (not implemented yet)
+The UDP protocol is used only to transfer data from the controller to the
+server. It is not possible to send commands from the server to the device using
+this protocol.
+
+== Data Compression (not implemented yet)
+To save traffic, it is appropriate to use data compression while
+transferring packets which contain a large amount of data. The DEFLATE
+algorithm of the cross-platform «z lib» library is used for compression. Both TCP
+and UDP transport protocols are supported. The container should consist of
+only one packet in text format.
