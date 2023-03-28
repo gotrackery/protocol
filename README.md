@@ -1,6 +1,6 @@
 # GoTrackery Protocol
 
-![LintAndTest](https://github.com/gotrackery/protocol/actions/workflows/audit.yml/badge.svg)
+![LintAndTest](https://github.com/gotrackery/protocol/actions/workflows/vet.yml/badge.svg)
 
 GoTrackery Protocol is repository of go implementation of GPS protocols.
 
