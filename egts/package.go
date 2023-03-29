@@ -13,7 +13,7 @@ import (
 const (
 	// DefaultHeaderLen is default header length for EGTS protocol.
 	DefaultHeaderLen       = 11
-	allowedFirstByte1 byte = 0x31 // 1 - version
+	allowedFirstByte1 byte = 0x01 // 1 - version
 )
 
 // ScanPackage implements bufio.SplitFunc contract to extract EGTS data packet from incoming bytes stream.
@@ -24,7 +24,8 @@ func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error)
 	}
 
 	if len(data) > 1 && data[0] != allowedFirstByte1 {
-		return len(data), data, protocol.ErrInconsistentData // let handle it, log for example
+		return 0, nil, protocol.ErrInconsistentData // Not possible to pass data to Scanner.Bytes().
+		// It is possible to implement own scanner package to be able to pass data to Scanner.Bytes() and log it then.
 	}
 
 	if len(data) < headerLen {
