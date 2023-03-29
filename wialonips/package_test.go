@@ -688,8 +688,8 @@ func TestScanPackage(t *testing.T) {
 				data:  []byte("\r\n"),
 				atEOF: false,
 			},
-			wantAdvance: 2,
-			wantToken:   []byte("\r\n"),
+			wantAdvance: 0,
+			wantToken:   nil,
 			wantErr:     true,
 		},
 		{
@@ -698,8 +698,8 @@ func TestScanPackage(t *testing.T) {
 				data:  []byte("\r\n_"),
 				atEOF: false,
 			},
-			wantAdvance: 3,
-			wantToken:   []byte("\r\n_"),
+			wantAdvance: 0,
+			wantToken:   nil,
 			wantErr:     true,
 		},
 		{
@@ -768,8 +768,8 @@ func TestScanPackage(t *testing.T) {
 				data:  []byte("\n"),
 				atEOF: false,
 			},
-			wantAdvance: 1,
-			wantToken:   []byte("\n"),
+			wantAdvance: 0,
+			wantToken:   nil,
 			wantErr:     true,
 		},
 		{
@@ -778,8 +778,8 @@ func TestScanPackage(t *testing.T) {
 				data:  []byte("\n"),
 				atEOF: true,
 			},
-			wantAdvance: 1,
-			wantToken:   []byte("\n"),
+			wantAdvance: 0,
+			wantToken:   nil,
 			wantErr:     true,
 		},
 	}
@@ -787,35 +787,74 @@ func TestScanPackage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAdvance, gotToken, err := ScanPackage(tt.args.data, tt.args.atEOF)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ScanLines() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ScanPackage() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotAdvance != tt.wantAdvance {
-				t.Errorf("ScanLines() gotAdvance = %v, want %v", gotAdvance, tt.wantAdvance)
+				t.Errorf("ScanPackage() gotAdvance = %v, want %v", gotAdvance, tt.wantAdvance)
 			}
 			if !reflect.DeepEqual(gotToken, tt.wantToken) {
-				t.Errorf("ScanLines() gotToken = %v, want %v", gotToken, tt.wantToken)
+				t.Errorf("ScanPackage() gotToken = %v, want %v", gotToken, tt.wantToken)
 			}
 		})
 	}
 }
 
+// TestScanRealPackage is based on recorded real TCP payload with tcpdump and tcpflow.
 func TestScanRealPackage(t *testing.T) {
-	files, err := os.ReadDir("../test/wialonips")
-	require.NoError(t, err)
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		t.Run(file.Name(), func(t *testing.T) {
-			f, err := os.Open("../test/wialonips/" + file.Name())
+	type args struct {
+		path string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantCount int
+		wantErr   assert.ErrorAssertionFunc
+	}{
+		{
+			name:      "0001.data",
+			args:      args{path: "../test/wialonips/0001.data"},
+			wantCount: 9,
+			wantErr:   assert.NoError,
+		},
+		{
+			name:      "0002.data",
+			args:      args{path: "../test/wialonips/0002.data"},
+			wantCount: 11,
+			wantErr:   assert.NoError,
+		},
+		{
+			name:      "0003.data",
+			args:      args{path: "../test/wialonips/0003.data"},
+			wantCount: 28,
+			wantErr:   assert.NoError,
+		},
+		{
+			name:      "0004.data",
+			args:      args{path: "../test/wialonips/0004.data"},
+			wantCount: 12,
+			wantErr:   assert.NoError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, err := os.Open(tt.args.path)
 			require.NoError(t, err)
 			defer f.Close()
 
+			cnt := 0
 			scanner := bufio.NewScanner(f)
 			scanner.Split(ScanPackage)
 			for scanner.Scan() {
-				assert.NoError(t, scanner.Err())
+				cnt++
+				// fmt.Println(hex.EncodeToString(scanner.Bytes()))
+			}
+			if !tt.wantErr(t, scanner.Err()) {
+				t.Errorf("ScanPackage() got unexpected error result = %v", scanner.Err())
+			}
+			if tt.wantCount != cnt {
+				t.Errorf("ScanPackage() got packages = %v, want %v", cnt, tt.wantCount)
 			}
 		})
 	}

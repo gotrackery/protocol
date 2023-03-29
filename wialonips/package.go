@@ -85,7 +85,8 @@ func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error)
 		data[0] != allowedFirstByte1 &&
 		data[0] != allowedFirstByte2 &&
 		data[0] != allowedFirstByteFF {
-		return len(data), data, protocol.ErrInconsistentData // let handle it, log for example
+		return 0, nil, protocol.ErrInconsistentData // Not possible to pass data to Scanner.Bytes().
+		// It is possible to implement own scanner package to be able to pass data to Scanner.Bytes() and log it then.
 	}
 	if i := bytes.IndexByte(data, '\n'); i >= 0 {
 		if len(data) > 1 && data[i-1] == '\r' {
