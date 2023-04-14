@@ -76,6 +76,7 @@ type Message interface {
 }
 
 // ScanPackage implements bufio.SplitFunc contract to extract Wialon IPS data packet from incoming bytes stream.
+// Data packets are delimited by \r\n and starting with 0x23, 0x31, 0x32 or 0xFF bytes.
 func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error) { //nolint:cyclop
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
