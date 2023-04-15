@@ -1,0 +1,159 @@
+= Wialon Retranslator
+
+The Wialon Retranslator protocol (v. 1.0) is used to retransmit data in binary format using TCP. Using the protocol, you can transfer location information, values of various sensors, and JPEG images.
+
+#Only Decoder is implemented for now!#
+
+.Data Type Table
+[%autowidth]
+|===
+| *Size (Bytes)* | *Type* | *Byte Order* | *Description*
+| N | Binary .5+| Big-endian | Binary data.
+| N | String | The value must be converted according to ASCII encoding. Its limit is determined by the zero byte 0x00.
+| 2 | Short | An unassigned integer.
+| 4 | Integer | A signed integer.
+| 8 | Long | A signed integer.
+| 8 | Double | Little-endian | A signed fractional number.
+| 1 | Byte | - | An unassigned integer.
+|===
+
+.Packet Structure
+[%autowidth]
+|===
+| Packet Size | UID | Time | Bitmask | Posinfo Block | Pwr_ext Block | Avl_inputs Block | Data Block ...
+|===
+
+.Packet Structure Table
+[%autowidth]
+|===
+| *Field Type* | *Field Value* | *Field Description*
+| Integer | Packet size | The size of the whole packet, excluding the current field. Little-endian byte order. The only exception from the Data Type Table.
+| String | Unique identifier of the controller.
+
+Ends with `0x00` byte.
+| Corresponds to the unique identifier of the Wialon unit.
+| Integer | Time | Timestamp in seconds since January 1, 1970 (UTC±00:00).
+| Integer | Message bit mask
+a|
+[%autowidth]
+!===
+2+! *Bitmask Description Table*
+! 0x00000001 ! Information about location.
+! 0x00000002 ! Information about digital inputs.
+! 0x00000004 ! Information about digital outputs.
+! 0x00000010 ! Alarm bit.
+! 0x00000020 ! Driver ID information.
+! 0xFFFFFFC8 ! Bits are reserved.
+!===
+| - | Data block structure | A substructure that contains data blocks. Description is below.
+|===
+
+.Data Block
+[%autowidth]
+|===
+| *Size (bytes)* | *Field Type* | *Field Description*
+| 2 | Short | Block delimiter
+| 4 | Integer | Block size
+| 1 | Byte
+a|
+[%autowidth]
+!===
+2+! *Security attribute*
+! `1` ! parameter hidden
+! `0` ! parameter shown
+!===
+For `posinfo`, `avl_inputs`, `avl_outputs`, `avl_driver` must be `1`.
+
+For others must be `0`
+| 1 | Byte
+a|
+[%autowidth]
+!===
+2+! *Data block type*
+! `1` ! text
+! `2` ! binary
+! `3` ! integer
+! `4` ! double
+! `5` ! long
+!===
+| - | Text
+a|
+[%autowidth]
+!===
+2+! *Block name*
+! `posinfo` ! block with coordinates
+! `imag` ! image in JPEG format
+! `pwr_ext` ! voltage supply
+! `avl_inputs` ! digital inputs value
+! `avl_outputs` ! digital outputs value
+! `avl_driver` ! driver ID value
+! `adc1`, `adc2`, ... ! analog sensors value
+! `gsm` ! gsm signal level
+! `ign` ! ignition
+! `can1`, `can2`, ... ! CAN value (bus topology)
+! ... ! any names with 38 bytes max length
+!===
+Ends with `0x00` byte
+| - | - | Block value
+|===
+
+.Posinfo Block Binary Value
+[%autowidth]
+|===
+| *Field Type* | *Field Value* | *Field Description*
+| Double | Longitude | Longitude.
+| Double | Latitude | Latitude.
+| Double | Altitude | Absolute altitude above sea level. Measured in meters.
+| Short | Speed | Measured in km/h.
+| Short | Course | Degrees 0 – 359.
+| Byte | Sats | Number of satellites.
+|===
+
+.Image Block Binary Value
+[%autowidth]
+|===
+| *Field Type* | *Field Value* | *Field Description*
+| Long | Title | Constant: 0x0000000000000000.
+| Integer | Image Size | Only the binary part of the block is included in the size.
+| Binary | Image | JPEG data.
+|===
+
+== Confirmation of Data Processing
+
+To each valid incoming packet, Wialon sends 0x11 as a response. If data is retransmitted from Wialon to a third-party platform, the response is not required.
+
+== Example of Packet Parsing
+Source packet:
+`74000000333533393736303133343435343835005D515DBB000000030BBB000000270102706F73696E666F00A027AFDF5D9848403AC7253383DD4B400000000000805A40003601460B0BBB0000001200047077725F657874002B8716D9CE973B400BBB00000011010361766C5F696E707574730000000001`
+
+.Explain table
+[%autowidth]
+|===
+| *Bytes* | *Description* | *Value*
+| `74000000` | Packet size | 116
+| `33353339373630313334343534383500`  | Controller identifier | 353976013445485
+| `5D515DBB` | UTC time | 1565613499 = 2019/08/12 15:38:19
+| `00000003` | Bitmask  | 3
+| `0BBB` | Block delimiter  | 3003
+| `00000027` | Block size | 39
+| `01` | Stealth attribute | 1
+| `02` | Data type of the block  | 2
+| `706F73696E666F00` | Name of the block | posinfo
+| `A027AFDF5D984840` | Longitude | 49.1903648
+| `3AC7253383DD4B40` | Latitude | 55.7305664
+| `0000000000805A40` | Altitude | 106.0
+| `0036` | Speed | 54
+| `0146` | Course | 326
+| `0B` | Number of satellites | 11
+| `0BBB` | Block delimiter | 3003
+| `00000012` | Block size | 18
+| `00` | Stealth attribute | 0
+| `04` | Type of block data | 4
+| `7077725F65787400` | Name of the block | pwr_ext
+| `2B8716D9CE973B40` | Value | 27.593
+| `0BBB` | Block delimiter | 3003
+| `00000011` | Block size | 17
+| `01` | Stealth attribute | 1
+| `03` | Type of block data | 3
+| `61766C5F696E7075747300` | Name of the block | avl_inputs
+| `00000001` | Value  | 1
