@@ -35,12 +35,12 @@ a|
 [%autowidth]
 !===
 2+! *Bitmask Description Table*
-! 0x00000001 ! Information about location.
-! 0x00000002 ! Information about digital inputs.
-! 0x00000004 ! Information about digital outputs.
-! 0x00000010 ! Alarm bit.
-! 0x00000020 ! Driver ID information.
-! 0xFFFFFFC8 ! Bits are reserved.
+! `0x00000001` ! Information about location.
+! `0x00000002` ! Information about digital inputs.
+! `0x00000004` ! Information about digital outputs.
+! `0x00000010` ! Alarm bit.
+! `0x00000020` ! Driver ID information.
+! `0xFFFFFFC8` ! Bits are reserved.
 !===
 | - | Data block structure | A substructure that contains data blocks. Description is below.
 |===
@@ -109,7 +109,7 @@ a|
 [%autowidth]
 |===
 | *Field Type* | *Field Value* | *Field Description*
-| Long | Title | Constant: 0x0000000000000000.
+| Long | Title | Constant: `0x0000000000000000`.
 | Integer | Image Size | Only the binary part of the block is included in the size.
 | Binary | Image | JPEG data.
 |===
