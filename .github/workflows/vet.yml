@@ -1,4 +1,4 @@
-name: Audit
+name: Vet
 
 on:
   push:
@@ -9,8 +9,7 @@ on:
     branches: [main]
 
 jobs:
-#  audit job performs a set of checks
-  audit:
+  vet:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
