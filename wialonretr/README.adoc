@@ -9,7 +9,7 @@ The Wialon Retranslator protocol (v. 1.0) is used to retransmit data in binary f
 |===
 | *Size (Bytes)* | *Type* | *Byte Order* | *Description*
 | N | Binary .5+| Big-endian | Binary data.
-| N | String | The value must be converted according to ASCII encoding. Its limit is determined by the zero byte 0x00.
+| N | String | The value must be converted according to ASCII encoding. Its limit is determined by the zero byte `0x00`.
 | 2 | Short | An unassigned integer.
 | 4 | Integer | A signed integer.
 | 8 | Long | A signed integer.
@@ -28,10 +28,7 @@ The Wialon Retranslator protocol (v. 1.0) is used to retransmit data in binary f
 |===
 | *Field Type* | *Field Value* | *Field Description*
 | Integer | Packet size | The size of the whole packet, excluding the current field. Little-endian byte order. The only exception from the Data Type Table.
-| String | Unique identifier of the controller.
-
-Ends with `0x00` byte.
-| Corresponds to the unique identifier of the Wialon unit.
+| String | Unique identifier of the controller | Corresponds to the unique identifier of the Wialon unit.
 | Integer | Time | Timestamp in seconds since January 1, 1970 (UTC±00:00).
 | Integer | Message bit mask
 a|
@@ -76,7 +73,7 @@ a|
 ! `4` ! double
 ! `5` ! long
 !===
-| - | Text
+| - | String
 a|
 [%autowidth]
 !===
@@ -93,7 +90,6 @@ a|
 ! `can1`, `can2`, ... ! CAN value (bus topology)
 ! ... ! any names with 38 bytes max length
 !===
-Ends with `0x00` byte
 | - | - | Block value
 |===
 
@@ -117,12 +113,14 @@ Ends with `0x00` byte
 | Integer | Image Size | Only the binary part of the block is included in the size.
 | Binary | Image | JPEG data.
 |===
+#!Warning! Implementation is not suitable to process big size JPEG data.#
 
 == Confirmation of Data Processing
 
 To each valid incoming packet, Wialon sends 0x11 as a response. If data is retransmitted from Wialon to a third-party platform, the response is not required.
 
 == Example of Packet Parsing
+
 Source packet:
 `74000000333533393736303133343435343835005D515DBB000000030BBB000000270102706F73696E666F00A027AFDF5D9848403AC7253383DD4B400000000000805A40003601460B0BBB0000001200047077725F657874002B8716D9CE973B400BBB00000011010361766C5F696E707574730000000001`
 
