@@ -1,0 +1,114 @@
+= h02 protocol
+
+`*XX,YYYYYYYYYY,CMD/TYPE,value 1,value 2,...,value N#`
+
+Data is comma `,` separated.
+
+.General packet structure
+[%autowidth]
+|===
+| Field | Explanation
+| `*` | Packet start marker
+| `XX` | Supplier name, ASCII character
+| `YYYYYYYYYY` | Device ID (IMEI)
+| `CMD/TYPE` | Command or PacketType
+| `#` | Packet end marker
+|===
+
+`*HQ,9117925867,V6,111804,A,5547.7871,N,3734.7756,E,0.00,0.00,030423,FFF7FBFF,250,1,6303,50173,89701010068690251659,#`
+
+.V6 packet structure
+[%autowidth]
+|===
+| Field | Explanation
+| `*` | Packet start marker
+| `HQ` | Supplier name, ASCII character
+| `9117925867` | Device ID
+| `V6` | V6 PacketType
+| `111804` | Time: 11:18:04 `HHMISS`
+| `A` a| Data valid
+[%autowidth]
+!===
+2+! *Possible Values*
+! `A` ! GPS positioning data is valid data
+! `V` ! GPS data is invalid positioning data
+! `B` ! Compass
+!===
+| `5547.7871` | Latitude. Format `DDFF.FFFF`, `DD`:Latitude Degree (00 ~ 90), `FF.FFFF`: Latitude points(00.0000 ~ 59.9999)
+| `N` | Latitude symbol (`N`: northern latitude，`S`: southern latitude)
+| `3734.7756` | Longitude. Format `DDDFF.FFFF`，`DDD`: Longitude Degree (000 ~ 180)，`FF.FFFF`: Longitude points (00.0000 ~ 59.9999)
+| `E` | Longitude symbol (`E`: east longitude，`W`: west longitude)
+| `0.00` | Speed，range 000.00 ~ 999.99
+| `0.00` | Azimuth，Due north is 0 degree，resolution is 1 degree，Clockwise direction.The information fields maybe null,that means the degree is 0
+| `030423` | Date: 03/04/23 `DDMMYY`
+| `FFF7FBFF` | Terminal Status,total 4 bytes,represent vehicle machine component state， vehicle component status and alarm status ...
+| `250` | mcc
+| `1` | mnc
+| `6303` | lac
+| `50173` | cid
+| `89701010068690251659` | sim serial num
+| ? |
+| `#` | Packet end marker
+|===
+
+`2491179258671120090304235547786006037347790e000025fff7fbff00ce1e0d0000000000fa01189fc3fd19`
+[%autowidth]
+|===
+| No. | HexNo. | Content | Value | Explanation
+| 01 | 00 | 0x24 | $ | Record Header,use for identifying records starting position.
+| 02 | 01 .5+| 0x9117925867 .5+| 9117925867 .5+| Device ID (IMEI)
+| 03 | 02
+| 04 | 03
+| 05 | 04
+| 06 | 05
+| 07 | 06 .3+| 0x112009 .3+| 11:20:09 .3+| Time (HHMISS)
+| 08 | 07
+| 09 | 08
+| 10 | 09 .3+| 0x030423 .3+| 03/04/23 .3+| Date (DDMMYY)
+| 11 | 0A
+| 12 | 0B
+| 13 | 0C .4+| 0x55477860 .4+| 55"47.7860 .4+| Latitude
+| 14 | 0D
+| 15 | 0E
+| 16 | 0F
+| 17 | 10 | 0x06 | 06 | Battery power (6=100% 5=80% 4=60% 3=20% 2=10%)
+| 18 | 11 .5+a| 0x037347790e
+
+e = 1110
+.5+| 037"34.7790 .5+a| Longitude + values: N, E, A/V
+[%autowidth]
+!===
+4+! *Last 4 bits*
+! bit3 ! 1 ! East ! 1=East longitude, 0=West longitude
+! bit2 ! 1 ! North ! 1=North latitude, 0=Southern latitude
+! bit1 ! 1 ! A ! 1=A，0=V (A = valid data, 0 = invalid data)
+! bit0 ! 0 ! - ! Not defined
+!===
+| 19 | 12
+| 20 | 13
+| 21 | 14
+| 22 | 15
+| 23 | 16 .3+| 0x000025 .3+| 000, 025 .3+| Speed, direction
+| 24 | 17
+| 25 | 18
+| 26 | 19 .4+| 0xfff7fbff .4+| 0xfff7fbff .4+| Vehicle Status
+| 27 | 1A
+| 28 | 1B
+| 29 | 1C
+| 30 | 1D .2+| 0x00ce .2+| 0x00ce .2+| Usr_alarm_flag
+| 31 | 1E
+| 32 | 1F | 0x1e | 0x1e | GSM signals (1 to 31)
+| 33 | 20 | 0x0d | 0x0d | GPS signal
+| 34 | 21 .4+| 0x00000000 .4+| 0x00000000 .4+| GPS units km mileage
+| 35 | 22
+| 36 | 23
+| 37 | 24
+| 38 | 25 .2+| 0x00fa .2+| 0x00fa .2+| Country Code (MCC)
+| 39 | 26
+| 40 | 27 | 0x01 | 0x01 | Network Code (MNC)
+| 41 | 28 .2+| 0x189f .2+| 0x189f .2+| Location Area Code (LAC)
+| 42 | 29
+| 43 | 2A .2+| 0xc3fd .2+| 0xc3fd .2+| Cell ID (CID)
+| 44 | 2B
+| 45 | 2C | 0x19 | 25 | Record number
+|===

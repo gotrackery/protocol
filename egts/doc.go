@@ -1,4 +1,4 @@
-// Package egts implements EGTS (Era Glonass Telematics Standard) - telematic data transmission standard developed by
+// Packet egts implements EGTS (Era Glonass Telematics Standard) - telematic data transmission standard developed by
 // the Government of the Russian Federation and approved by Order #285 of the Ministry of Transport of July 31, 2012
 //
 // http://docs.cntd.ru/document/1200095098

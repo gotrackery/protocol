@@ -21,7 +21,7 @@ var (
 	}
 	testEgtsSrTermIdentityPkgBin = []byte{0x01, 0x00, 0x03, 0x0B, 0x00, 0x13, 0x00, 0x86, 0x00, 0x01, 0xB6, 0x08, 0x00,
 		0x5F, 0x00, 0x99, 0x02, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x05, 0x00, 0xB0, 0x09, 0x02, 0x00, 0x10, 0x0D, 0xCE}
-	testEgtsSrTermIdentityPkg = Package{
+	testEgtsSrTermIdentityPkg = Packet{
 		ProtocolVersion:  1,
 		SecurityKeyID:    0,
 		Prefix:           "00",
@@ -87,7 +87,7 @@ func TestEgtsSrTermIdentityPkg_Encode(t *testing.T) {
 }
 
 func TestEgtsSrTermIdentityPkg_Decode(t *testing.T) {
-	srTermIdentPkg := Package{}
+	srTermIdentPkg := Packet{}
 
 	err := srTermIdentPkg.Decode(testEgtsSrTermIdentityPkgBin)
 	if assert.NoError(t, err) {

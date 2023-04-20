@@ -6,10 +6,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/gotrackery/protocol"
+	"github.com/gotrackery/protocol/common"
 )
 
 const (
@@ -28,36 +27,6 @@ var (
 	eol       = []byte{0x00}       // end-of-line
 	blockMark = []byte{0x0B, 0xBB} // block separator
 )
-
-// ScanPackage implements bufio.SplitFunc contract to extract WialonRetranslator data packet from incoming bytes stream.
-// Data packets start with 4 little endian bytes of packet length.
-func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-
-	if len(data) > 0 && data[0] == 0 {
-		return 0, nil, protocol.ErrInconsistentData // Not possible to pass data to Scanner.Bytes().
-		// It is possible to implement own scanner package to be able to pass data to Scanner.Bytes() and log it then.
-	}
-
-	// calc length and wait when whole packet is read
-	var bodyLen uint32
-	if len(data) > packageHeaderLen {
-		bodyLen = binary.LittleEndian.Uint32(data[:packageHeaderLen])
-	}
-	totalLen := int(packageHeaderLen + bodyLen)
-	if len(data) >= totalLen {
-		return totalLen, data[:totalLen], nil
-	}
-
-	// If we're at EOF, we have a final.
-	if atEOF {
-		return len(data), data, io.EOF
-	}
-	// Request more data.
-	return 0, nil, nil
-}
 
 // Packet represents WialonRetranslator data packet.
 type Packet struct {
@@ -82,13 +51,13 @@ func (p *Packet) Decode(data []byte) error {
 
 	var utc int32 // get utc time
 	if err := binary.Read(buf, binary.BigEndian, &utc); err != nil {
-		p.err = fmt.Errorf("read utc time: %w", errors.Join(err, protocol.ErrInconsistentData))
+		p.err = fmt.Errorf("read utc time: %w", errors.Join(err, common.ErrBadData))
 		return p.err
 	}
 	p.RegisteredAt = time.Unix(int64(utc), 0)
 
 	if err := binary.Read(buf, binary.BigEndian, &p.bitFlags); err != nil {
-		p.err = fmt.Errorf("read bit flags of messages: %w", errors.Join(err, protocol.ErrInconsistentData))
+		p.err = fmt.Errorf("read bit flags of messages: %w", errors.Join(err, common.ErrBadData))
 		return p.err
 	}
 
@@ -98,7 +67,7 @@ func (p *Packet) Decode(data []byte) error {
 	for scanner.Scan() {
 		var db DataBlock
 		if err := db.Decode(scanner.Bytes()); err != nil {
-			p.err = fmt.Errorf("decode data block: %w", errors.Join(err, protocol.ErrInconsistentData))
+			p.err = fmt.Errorf("decode data block: %w", errors.Join(err, common.ErrBadData))
 			return p.err
 		}
 		p.DataBlocks[db.name] = db

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gotrackery/protocol/generic"
+	"github.com/gotrackery/protocol/common"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -16,7 +16,7 @@ var _ Message = (*ShortenedDataMessage)(nil)
 // #SD#Date;Time;Lat1;Lat2;Lon1;Lon2;Speed;Course;Alt;Sats;CRC16\r\n.
 type ShortenedDataMessage struct {
 	RegisteredAt time.Time
-	Point        generic.PointWGS84
+	Point        common.PointWGS84
 	// Speed is type of int according specs, but there is found it comes in float xxx.yyy thru retranslation.
 	Speed  null.Float
 	Course null.Int

@@ -1,9 +1,8 @@
-package generic
+package common
 
 import (
 	"time"
 
-	"github.com/gotrackery/protocol"
 	"github.com/peterstace/simplefeatures/geom"
 	"github.com/rs/zerolog"
 	"gopkg.in/guregu/null.v4"
@@ -49,7 +48,7 @@ type Position struct {
 	Cellular   *Cellular
 	Protocol   string
 	DeviceID   string
-	Attributes protocol.Attributes
+	Attributes Attributes
 	DeviceTime time.Time
 	Speed      null.Float
 	Course     null.Float

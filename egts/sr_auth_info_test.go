@@ -14,7 +14,7 @@ var (
 		0x44, 0x37, 0x34, 0x41, 0x44, 0x32, 0x45, 0x42, 0x33, 0x00, 0x92, 0x61,
 	}
 
-	testAuthInfoPkg = Package{
+	testAuthInfoPkg = Packet{
 		ProtocolVersion:  1,
 		SecurityKeyID:    0,
 		Prefix:           "00",
@@ -66,7 +66,7 @@ func TestEgtsSrAuthInfo_Encode(t *testing.T) {
 }
 
 func TestEgtsSrAuthInfo_Decode(t *testing.T) {
-	authPkg := Package{}
+	authPkg := Packet{}
 
 	if err := authPkg.Decode(srAuthInfoPkgBytes); assert.NoError(t, err) {
 		assert.Equal(t, authPkg, testAuthInfoPkg)

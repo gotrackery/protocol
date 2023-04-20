@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/gotrackery/protocol"
+	"github.com/gotrackery/protocol/common"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -23,7 +23,7 @@ type DataMessage struct {
 	Outputs    null.Int // bit map.
 	ADC        []null.Float
 	IButton    null.String
-	Attributes protocol.Attributes
+	Attributes common.Attributes
 }
 
 // Decode decodes a WialonIPS message.

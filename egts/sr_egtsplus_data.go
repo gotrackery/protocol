@@ -2,7 +2,7 @@
 // source: egts_sr_egtsplus_data.proto
 
 /*
-Package nv is a generated protocol buffer package.
+Packet nv is a generated protocol buffer package.
 
 It is generated from these files:
 
