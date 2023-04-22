@@ -1,11 +1,10 @@
-package generic
+package common
 
 import (
 	"database/sql"
 	"reflect"
 	"testing"
 
-	"github.com/gotrackery/protocol"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -16,9 +15,9 @@ func TestAttributes_AppendNullInt(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		a    protocol.Attributes
+		a    Attributes
 		args args
-		want protocol.Attributes
+		want Attributes
 	}{
 		{
 			name: "add to nil",
@@ -30,11 +29,11 @@ func TestAttributes_AppendNullInt(t *testing.T) {
 					Valid: true,
 				}},
 			},
-			want: protocol.Attributes{"test": int64(4)},
+			want: Attributes{"test": int64(4)},
 		},
 		{
 			name: "add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				i: null.Int{NullInt64: sql.NullInt64{
@@ -42,11 +41,11 @@ func TestAttributes_AppendNullInt(t *testing.T) {
 					Valid: true,
 				}},
 			},
-			want: protocol.Attributes{"early": "test", "test": int64(4)},
+			want: Attributes{"early": "test", "test": int64(4)},
 		},
 		{
 			name: "invalid add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				i: null.Int{NullInt64: sql.NullInt64{
@@ -54,7 +53,7 @@ func TestAttributes_AppendNullInt(t *testing.T) {
 					Valid: false,
 				}},
 			},
-			want: protocol.Attributes{"early": "test"},
+			want: Attributes{"early": "test"},
 		},
 		{
 			name: "invalid add to not nil",
@@ -85,9 +84,9 @@ func TestAttributes_AppendNullFloat(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		a    protocol.Attributes
+		a    Attributes
 		args args
-		want protocol.Attributes
+		want Attributes
 	}{
 		{
 			name: "add to nil",
@@ -99,11 +98,11 @@ func TestAttributes_AppendNullFloat(t *testing.T) {
 					Valid:   true,
 				}},
 			},
-			want: protocol.Attributes{"test": 4.4},
+			want: Attributes{"test": 4.4},
 		},
 		{
 			name: "add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				f: null.Float{NullFloat64: sql.NullFloat64{
@@ -111,11 +110,11 @@ func TestAttributes_AppendNullFloat(t *testing.T) {
 					Valid:   true,
 				}},
 			},
-			want: protocol.Attributes{"early": "test", "test": 4.4},
+			want: Attributes{"early": "test", "test": 4.4},
 		},
 		{
 			name: "invalid add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				f: null.Float{NullFloat64: sql.NullFloat64{
@@ -123,7 +122,7 @@ func TestAttributes_AppendNullFloat(t *testing.T) {
 					Valid:   false,
 				}},
 			},
-			want: protocol.Attributes{"early": "test"},
+			want: Attributes{"early": "test"},
 		},
 		{
 			name: "invalid add to not nil",
@@ -154,9 +153,9 @@ func TestAttributes_AppendNullFloatSlice(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		a    protocol.Attributes
+		a    Attributes
 		args args
-		want protocol.Attributes
+		want Attributes
 	}{
 		{
 			name: "add to nil",
@@ -170,11 +169,11 @@ func TestAttributes_AppendNullFloatSlice(t *testing.T) {
 					}},
 				},
 			},
-			want: protocol.Attributes{"test_0": 4.4},
+			want: Attributes{"test_0": 4.4},
 		},
 		{
 			name: "add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				s: []null.Float{
@@ -188,11 +187,11 @@ func TestAttributes_AppendNullFloatSlice(t *testing.T) {
 					}},
 				},
 			},
-			want: protocol.Attributes{"early": "test", "test_0": 4.4, "test_1": 4.4},
+			want: Attributes{"early": "test", "test_0": 4.4, "test_1": 4.4},
 		},
 		{
 			name: "add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				s: []null.Float{
@@ -206,7 +205,7 @@ func TestAttributes_AppendNullFloatSlice(t *testing.T) {
 					}},
 				},
 			},
-			want: protocol.Attributes{"early": "test", "test_1": 4.4},
+			want: Attributes{"early": "test", "test_1": 4.4},
 		},
 		{
 			name: "invalid add to not nil",
@@ -243,9 +242,9 @@ func TestAttributes_AppendNullString(t *testing.T) {
 	}
 	tests := []struct {
 		name string
-		a    protocol.Attributes
+		a    Attributes
 		args args
-		want protocol.Attributes
+		want Attributes
 	}{
 		{
 			name: "add to nil",
@@ -257,11 +256,11 @@ func TestAttributes_AppendNullString(t *testing.T) {
 					Valid:  true,
 				}},
 			},
-			want: protocol.Attributes{"test": "4"},
+			want: Attributes{"test": "4"},
 		},
 		{
 			name: "add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				s: null.String{NullString: sql.NullString{
@@ -269,11 +268,11 @@ func TestAttributes_AppendNullString(t *testing.T) {
 					Valid:  true,
 				}},
 			},
-			want: protocol.Attributes{"early": "test", "test": "4"},
+			want: Attributes{"early": "test", "test": "4"},
 		},
 		{
 			name: "invalid add to not nil",
-			a:    protocol.Attributes{"early": "test"},
+			a:    Attributes{"early": "test"},
 			args: args{
 				name: "test",
 				s: null.String{NullString: sql.NullString{
@@ -281,7 +280,7 @@ func TestAttributes_AppendNullString(t *testing.T) {
 					Valid:  false,
 				}},
 			},
-			want: protocol.Attributes{"early": "test"},
+			want: Attributes{"early": "test"},
 		},
 		{
 			name: "invalid add to not nil",
@@ -311,7 +310,7 @@ func TestAttributes_GetFloat64(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		a       protocol.Attributes
+		a       Attributes
 		args    args
 		wantF   float64
 		wantErr bool
@@ -325,14 +324,14 @@ func TestAttributes_GetFloat64(t *testing.T) {
 		},
 		{
 			name:    "not a float",
-			a:       protocol.Attributes{"test": "test"},
+			a:       Attributes{"test": "test"},
 			args:    args{key: "test"},
 			wantF:   0,
 			wantErr: true,
 		},
 		{
 			name:    "float",
-			a:       protocol.Attributes{"test": 4.4},
+			a:       Attributes{"test": 4.4},
 			args:    args{key: "test"},
 			wantF:   4.4,
 			wantErr: false,
@@ -358,7 +357,7 @@ func TestAttributes_GetInt64(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		a       protocol.Attributes
+		a       Attributes
 		args    args
 		wantI   int64
 		wantErr bool
@@ -372,14 +371,14 @@ func TestAttributes_GetInt64(t *testing.T) {
 		},
 		{
 			name:    "not a int",
-			a:       protocol.Attributes{"test": "test"},
+			a:       Attributes{"test": "test"},
 			args:    args{key: "test"},
 			wantI:   0,
 			wantErr: true,
 		},
 		{
 			name:    "int",
-			a:       protocol.Attributes{"test": int64(4)},
+			a:       Attributes{"test": int64(4)},
 			args:    args{key: "test"},
 			wantI:   4,
 			wantErr: false,
@@ -405,7 +404,7 @@ func TestAttributes_GetString(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		a       protocol.Attributes
+		a       Attributes
 		args    args
 		wantF   string
 		wantErr bool
@@ -419,14 +418,14 @@ func TestAttributes_GetString(t *testing.T) {
 		},
 		{
 			name:    "not a string",
-			a:       protocol.Attributes{"test": 4.4},
+			a:       Attributes{"test": 4.4},
 			args:    args{key: "test"},
 			wantF:   "",
 			wantErr: true,
 		},
 		{
 			name:    "string",
-			a:       protocol.Attributes{"test": "4"},
+			a:       Attributes{"test": "4"},
 			args:    args{key: "test"},
 			wantF:   "4",
 			wantErr: false,
@@ -452,7 +451,7 @@ func TestAttributes_GetType(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		a       protocol.Attributes
+		a       Attributes
 		args    args
 		want    string
 		wantErr bool
@@ -466,28 +465,28 @@ func TestAttributes_GetType(t *testing.T) {
 		},
 		{
 			name:    "no key",
-			a:       protocol.Attributes{"tst": 4},
+			a:       Attributes{"tst": 4},
 			args:    args{key: "test"},
 			want:    "",
 			wantErr: true,
 		},
 		{
 			name:    "int",
-			a:       protocol.Attributes{"test": int64(4)},
+			a:       Attributes{"test": int64(4)},
 			args:    args{key: "test"},
 			want:    "int64",
 			wantErr: false,
 		},
 		{
 			name:    "float",
-			a:       protocol.Attributes{"test": 4.4},
+			a:       Attributes{"test": 4.4},
 			args:    args{key: "test"},
 			want:    "float64",
 			wantErr: false,
 		},
 		{
 			name:    "string",
-			a:       protocol.Attributes{"test": "4.4"},
+			a:       Attributes{"test": "4.4"},
 			args:    args{key: "test"},
 			want:    "string",
 			wantErr: false,

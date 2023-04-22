@@ -2,14 +2,13 @@ package wialonips
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 
-	"github.com/gotrackery/protocol"
+	"github.com/gotrackery/protocol/common"
 	"github.com/sigurn/crc16"
 )
 
-// PacketType is the type of package of Wialon IPS.
+// PacketType is the type of packet of Wialon IPS.
 type PacketType string
 
 const (
@@ -22,11 +21,9 @@ const (
 )
 
 var (
-	packageDelimiter        = []byte{0x23} // #
-	allowedFirstByte1  byte = 0x31         // 1 - version 1.1 UDP
-	allowedFirstByte2  byte = 0x32         // 2 - version 2.0 UDP
-	allowedFirstByteFF byte = 0xFF         // 0xFF - compressed
-	crc16Table              = crc16.MakeTable(crc16.CRC16_ARC)
+	packetTypeDelimiter      = []byte{0x23} // #
+	compressionMark     byte = 0xFF         // 0xFF - compressed
+	crc16Table               = crc16.MakeTable(crc16.CRC16_ARC)
 )
 
 const (
@@ -40,10 +37,6 @@ const (
 	UnknownVersion Version = iota // Unknown version. Used for initializing Version.
 	V1_1                          // Version 1.1
 	V2_0                          // Version 2.0
-)
-
-var (
-	ErrWialonIPSUnsupportedPacketType = errors.New("unsupported packet type")
 )
 
 // String returns the string representation of the version.
@@ -75,55 +68,27 @@ type Message interface {
 	Response() []byte
 }
 
-// ScanPackage implements bufio.SplitFunc contract to extract Wialon IPS data packet from incoming bytes stream.
-// Data packets are delimited by \r\n and starting with 0x23, 0x31, 0x32 or 0xFF bytes.
-func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error) { //nolint:cyclop
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-	if len(data) > 0 &&
-		data[0] != packageDelimiter[0] &&
-		data[0] != allowedFirstByte1 &&
-		data[0] != allowedFirstByte2 &&
-		data[0] != allowedFirstByteFF {
-		return 0, nil, protocol.ErrInconsistentData // Not possible to pass data to Scanner.Bytes().
-		// It is possible to implement own scanner package to be able to pass data to Scanner.Bytes() and log it then.
-	}
-	if i := bytes.IndexByte(data, '\n'); i >= 0 {
-		if len(data) > 1 && data[i-1] == '\r' {
-			// We have a full newline-terminated line.
-			return i + 1, data[0 : i+1], nil
-		}
-	}
-	// If we're at EOF, we have a final, non-terminated line. Return it.
-	if atEOF {
-		return len(data), data, nil
-	}
-	// Request more data.
-	return 0, nil, nil
-}
-
-// Package is the package of Wialon IPS protocol.
+// Packet is the packet of Wialon IPS protocol.
 // All data is received in text format as a packet which looks as follows:
 // #PT#msgCRC\r\n.
-type Package struct {
+type Packet struct {
 	Type    PacketType
 	Version Version
 	IMEI    string // IMEI is the unique identifier of the device.
 	Message Message
 }
 
-// NewPackage creates a new package of Wialon IPS protocol.
-func NewPackage(v Version, imei string) Package {
-	return Package{Version: v, IMEI: imei}
+// NewPacket creates a new packet of Wialon IPS protocol.
+func NewPacket(v Version, imei string) Packet {
+	return Packet{Version: v, IMEI: imei}
 }
 
 // Decode decodes bytes to the package of Wialon IPS protocol.
-func (p *Package) Decode(data []byte) error { //nolint:cyclop
+func (p *Packet) Decode(data []byte) error { //nolint:cyclop
 	// ToDo add deflate
-	bytesSet := bytes.SplitN(data, packageDelimiter, 3) //nolint:gomnd
-	if len(bytesSet) != 3 {                             //nolint:gomnd
-		return fmt.Errorf("invalid package structure: %w", protocol.ErrInconsistentData)
+	bytesSet := bytes.SplitN(data, packetTypeDelimiter, 3) //nolint:gomnd
+	if len(bytesSet) != 3 {                                //nolint:gomnd
+		return fmt.Errorf("invalid package structure: %w", common.ErrBadData)
 	}
 	// ToDo UDP bytesSet[0] contains Protocol_version;imei - v2.0 and imei - v1.0
 	p.parsePackageType(bytesSet[1])
@@ -162,7 +127,7 @@ func (p *Package) Decode(data []byte) error { //nolint:cyclop
 	return nil
 }
 
-func (p *Package) parsePackageType(data []byte) {
+func (p *Packet) parsePackageType(data []byte) {
 	p.Type = PacketType(data)
 	switch p.Type { //nolint:exhaustive
 	case LoginPacket, ShortenedDataPacket, DataPacket, BlackBoxPacket, PingPacket:

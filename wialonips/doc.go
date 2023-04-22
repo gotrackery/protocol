@@ -1,4 +1,4 @@
-// Package wialonips implements the Wialon IPS communication protocol that was developed by Gurtam for use in personal
+// Packet wialonips implements the Wialon IPS communication protocol that was developed by Gurtam for use in personal
 // and automotive GPS and GLONASS trackers which transfer data to a satellite monitoring server using the TCP or the
 // UDP protocol.
 //

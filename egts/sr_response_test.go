@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	egtsPkgSrResp = Package{
+	egtsPkgSrResp = Packet{
 		ProtocolVersion:  1,
 		SecurityKeyID:    0,
 		Prefix:           "00",
@@ -65,7 +65,7 @@ func TestEgtsPkgSrResp_Encode(t *testing.T) {
 }
 
 func TestEgtsPkgSrResp_Decode(t *testing.T) {
-	egtsPkg := Package{}
+	egtsPkg := Packet{}
 
 	err := egtsPkg.Decode(testEgtsPkgSrRespBytes)
 	if assert.NoError(t, err) {

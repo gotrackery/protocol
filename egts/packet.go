@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
-	"github.com/gotrackery/protocol"
 )
 
 const (
@@ -16,47 +14,11 @@ const (
 	allowedFirstByte1 byte = 0x01 // 1 - version
 )
 
-// ScanPackage implements bufio.SplitFunc contract to extract EGTS data packet from incoming bytes stream.
-func ScanPackage(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	const headerLen = 10
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-
-	if len(data) > 1 && data[0] != allowedFirstByte1 {
-		return 0, nil, protocol.ErrInconsistentData // Not possible to pass data to Scanner.Bytes().
-		// It is possible to implement own scanner package to be able to pass data to Scanner.Bytes() and log it then.
-	}
-
-	if len(data) < headerLen {
-		// Request more data.
-		return 0, nil, nil
-	}
-
-	bodyLen := binary.LittleEndian.Uint16(data[5:7])
-	pkgLen := uint16(data[3])
-	if bodyLen > 0 {
-		pkgLen += bodyLen + 2
-	}
-	if len(data) < int(pkgLen) {
-		// Request more data.
-		return 0, nil, nil
-	}
-
-	if atEOF {
-		// If we're at EOF, we have a final data. Return it.
-		return len(data), data, nil
-	}
-
-	// Finally got all data, return it.
-	return int(pkgLen), data[0:pkgLen], nil
-}
-
-// Package structure describes of the EGTS package.
+// Packet structure describes of the EGTS packet.
 // The Transport Layer Protocol header consists of the following fields: PRV, PRF, PR, CMP, ENA, RTE, HL, HE, FDL,
 // PID, PT, PRA, RCA, TTL, HCS. The Service Support Layer protocol is represented by the SFRD field,
 // the checksum of the Service Support Layer field is contained in the SFRCS field.
-type Package struct {
+type Packet struct {
 	// ProtocolVersion (PRV) parameter contains the value 0x01.
 	// The value of this parameter is incremented every time you change the header structure.
 	ProtocolVersion byte `json:"PRV"`
@@ -152,7 +114,7 @@ type Options struct {
 }
 
 // Decode parses the set of bytes into the packet structure.
-func (p *Package) Decode(content []byte, opt ...func(*Options)) error {
+func (p *Packet) Decode(content []byte, opt ...func(*Options)) error {
 	options := &Options{}
 	for _, o := range opt {
 		o(options)
@@ -294,7 +256,7 @@ func (p *Package) Decode(content []byte, opt ...func(*Options)) error {
 }
 
 // Encode encodes the string into a byte slice.
-func (p *Package) Encode(opt ...func(*Options)) ([]byte, error) {
+func (p *Packet) Encode(opt ...func(*Options)) ([]byte, error) {
 	var (
 		result []byte
 		err    error
@@ -400,12 +362,12 @@ func (p *Package) Encode(opt ...func(*Options)) ([]byte, error) {
 }
 
 // MarshalJSON translates the package into json. Use it to get simple text representation of the package content.
-func (p *Package) MarshalJSON() ([]byte, error) {
+func (p *Packet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(p) //nolint:wrapcheck
 }
 
 // Response prepares response for incoming packet.
-func (p *Package) Response() ([]byte, error) {
+func (p *Packet) Response() ([]byte, error) {
 	var (
 		resultCode []byte
 		err        error
@@ -468,7 +430,7 @@ func (p *Package) Response() ([]byte, error) {
 		}
 	}
 
-	respPkg := Package{
+	respPkg := Packet{
 		ProtocolVersion:   p.ProtocolVersion,
 		SecurityKeyID:     p.SecurityKeyID,
 		Prefix:            "00",
@@ -492,7 +454,7 @@ func (p *Package) Response() ([]byte, error) {
 }
 
 // prepareSRResultCode prepares result code (SR_Result_Code) for incoming packet.
-func (p *Package) prepareSRResultCode() ([]byte, error) {
+func (p *Packet) prepareSRResultCode() ([]byte, error) {
 	data := RecordDataSet{
 		RecordData{
 			SubrecordType:   SrResultCodeType,
@@ -520,7 +482,7 @@ func (p *Package) prepareSRResultCode() ([]byte, error) {
 		},
 	}
 
-	resp := Package{
+	resp := Packet{
 		ProtocolVersion:   p.ProtocolVersion,
 		SecurityKeyID:     p.SecurityKeyID,
 		Prefix:            "00",

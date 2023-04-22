@@ -11,7 +11,7 @@ var (
 		0x01, 0x06, 0x08, 0x00, 0x00, 0x00, 0x98, 0x01, 0x01, 0x05, 0x05, 0x00, 0x00, 0x47, 0x00,
 		0x00, 0x00, 0x51, 0x9d}
 
-	testDispatcherIdentityPkg = Package{
+	testDispatcherIdentityPkg = Packet{
 		ProtocolVersion:  1,
 		SecurityKeyID:    0,
 		Prefix:           "00",
@@ -61,7 +61,7 @@ func TestEgtsSrDispatcherIdentity_Encode(t *testing.T) {
 }
 
 func TestEgtsSrDispatcherIdentity_Decode(t *testing.T) {
-	authPkg := Package{}
+	authPkg := Packet{}
 
 	if err := authPkg.Decode(srDispatcherIdentityPkgBytes); assert.NoError(t, err) {
 		assert.Equal(t, authPkg, testDispatcherIdentityPkg)

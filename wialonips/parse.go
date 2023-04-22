@@ -10,14 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotrackery/protocol"
-	"github.com/gotrackery/protocol/generic"
+	"github.com/gotrackery/protocol/common"
 	"gopkg.in/guregu/null.v4"
 )
 
 //nolint:nakedret
 func parseBaseFields(data [][]byte) (
-	t time.Time, p generic.PointWGS84, speed null.Float, course null.Int, alt null.Float, sat null.Int, err error) {
+	t time.Time, p common.PointWGS84, speed null.Float, course null.Int, alt null.Float, sat null.Int, err error) {
 	t, err = parseTime(data[0:2])
 	if err != nil {
 		err = fmt.Errorf("parse time: %w", errors.Join(err, ErrWialonIPSParseDateTime)) // "0"
@@ -104,13 +103,13 @@ func parseADC(data []byte) (adc []null.Float, err error) {
 	return
 }
 
-func parseAttrs(data []byte) (a protocol.Attributes, err error) {
+func parseAttrs(data []byte) (a common.Attributes, err error) {
 	if len(data) == 0 || (len(data) == 2 && string(data) == na) {
 		return
 	}
 
 	bytesSet := bytes.Split(data, valuesDelimiter)
-	a = make(protocol.Attributes)
+	a = make(common.Attributes)
 	for _, attr := range bytesSet {
 		k, v, err := parseAttr(attr)
 		if err != nil {
@@ -155,30 +154,30 @@ func parseTime(data [][]byte) (t time.Time, err error) {
 	return
 }
 
-func parsePoint(data [][]byte) (generic.PointWGS84, error) {
-	latC, err := generic.ParseCardinalAxis(string(data[1]))
+func parsePoint(data [][]byte) (common.PointWGS84, error) {
+	latC, err := common.ParseCardinalAxis(string(data[1]))
 	if err != nil {
 		if string(data[1]) == na {
-			latC = generic.North
+			latC = common.North
 		} else {
-			return generic.PointWGS84{}, fmt.Errorf("parse latitude: %w", err)
+			return common.PointWGS84{}, fmt.Errorf("parse latitude: %w", err)
 		}
 	}
-	lonC, err := generic.ParseCardinalAxis(string(data[3]))
+	lonC, err := common.ParseCardinalAxis(string(data[3]))
 	if err != nil {
 		if string(data[1]) == na {
-			lonC = generic.East
+			lonC = common.East
 		} else {
-			return generic.PointWGS84{}, fmt.Errorf("parse logitude: %w", err)
+			return common.PointWGS84{}, fmt.Errorf("parse logitude: %w", err)
 		}
 	}
-	wgs84, err := generic.ParsePointWGS84(string(data[2]), lonC, string(data[0]), latC)
+	wgs84, err := common.ParsePointWGS84(string(data[2]), lonC, string(data[0]), latC)
 	if err != nil {
 		if string(data[0]) == na && string(data[2]) == na {
-			wgs84, _ = generic.ParsePointWGS84("0.0", lonC, "0.0", latC)
+			wgs84, _ = common.ParsePointWGS84("0.0", lonC, "0.0", latC)
 			wgs84.Valid = false
 		} else {
-			return generic.PointWGS84{}, fmt.Errorf("parse point: %w", err)
+			return common.PointWGS84{}, fmt.Errorf("parse point: %w", err)
 		}
 	}
 	return wgs84, nil
